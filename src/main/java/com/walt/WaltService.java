@@ -7,7 +7,7 @@ import java.util.List;
 
 public  interface WaltService{
 
-    Delivery createOrderAndAssignDriver(Customer customer, Restaurant restaurant, Date deliveryTime);
+    Delivery createOrderAndAssignDriver(Customer customer, Restaurant restaurant, Date deliveryTime) throws Exception;
 
     List<DriverDistance> getDriverRankReport();
 

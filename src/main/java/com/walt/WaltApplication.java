@@ -10,7 +10,9 @@ public class WaltApplication {
 
     private static final Logger log = LoggerFactory.getLogger(WaltApplication.class);
 
-    public static void main(String[] args) {
-        SpringApplication.run(WaltApplication.class);
+    public static void main(String[] args)
+    {
+        SpringApplication.run(WaltApplication.class, args);
+        System.out.println("Hello Welcome!");
     }
 }

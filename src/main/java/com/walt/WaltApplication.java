@@ -13,6 +13,5 @@ public class WaltApplication {
     public static void main(String[] args)
     {
         SpringApplication.run(WaltApplication.class, args);
-        System.out.println("Hello Welcome!");
     }
 }

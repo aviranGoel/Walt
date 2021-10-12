@@ -2,16 +2,12 @@ package com.walt;
 
 import com.walt.dao.*;
 import com.walt.model.*;
+import javafx.util.Pair;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.beans.IntrospectionException;
 import java.sql.Timestamp;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class WaltServiceImpl implements WaltService {
@@ -31,6 +27,16 @@ public class WaltServiceImpl implements WaltService {
     @Resource
     RestaurantRepository restaurantRepository;
 
+    /**
+     * Create a new order, by the given Customer, Restaurant and Date of deliveryTime,
+     * ans assign an available Driver to the order Delivery.
+     * Note: The Customer City and the Restaurant City must by the same.
+     * @param customer Customer who order a Delivery (Customer type).
+     * @param restaurant Restaurant where the order from (Restaurant type).
+     * @param deliveryTime Date And Time of the Delivery (Date type).
+     * @return A new Delivery which created (Delivery type).
+     * @throws Exception if the Customer City and the Restaurant City are not the same.
+     */
     @Override
     public Delivery createOrderAndAssignDriver(Customer customer, Restaurant restaurant, Date deliveryTime) throws Exception
     {
@@ -50,7 +56,7 @@ public class WaltServiceImpl implements WaltService {
         // Case when no driver is available to take the delivery.
         if (chosenDriver == null)
         {
-            return null;
+            throw new Exception("Sorry no driver available to take the new Delivery!");
         }
 
         // Create new delivery.
@@ -179,17 +185,107 @@ public class WaltServiceImpl implements WaltService {
         return deliveryOfDriver.size();
     }
 
+    /**
+     * Create a rank report of all Drivers and the total distance of the Delivery they made.
+     * @return List that represent the rank report, order by total distance in descending order (List<DriverDistance> type).
+     */
     @Override
     public List<DriverDistance> getDriverRankReport()
     {
-        System.out.println("WaltServiceImpl.getDriverRankReport");
-        return null;
+        // Find all Drivers.
+        List<Driver> driverList = (List<Driver>) driverRepository.findAll();
+
+        // Create and return the ordered rank report List
+        return getDriverDistanceListDescendingOrder(driverList);
     }
 
+    /**
+     * Create a List of all Drivers and the total distance of the Delivery they made,
+     * using the given List of Drivers.
+     * @param driverList Given List of Drivers (List<Driver> type).
+     * @return List of DriverDistance order by total distance in descending order (List<DriverDistance> type).
+     */
+    private List<DriverDistance> getDriverDistanceListDescendingOrder(List<Driver> driverList)
+    {
+        // Create a descending order List of Pairs of Driver name and its total Distance.
+        List<Pair<String, Double>> list_pair_driverNameDistance = getDescendingOrderList_driverNameDistance(driverList);
+
+        List<DriverDistance> list_driverDistance = new ArrayList<>();
+
+        Driver driver;
+        Long distance;
+        DriverDistance driverDistance;
+
+        // Create the List of DriverDistance.
+        // It will be in descending order, because we follow list_pair_driverNameDistance (a descending order List).
+        for (Pair<String, Double> pair_driverNameDistance : list_pair_driverNameDistance)
+        {
+            driver = driverRepository.findByName(pair_driverNameDistance.getKey());
+            distance = pair_driverNameDistance.getValue().longValue();
+
+            // Create new DriverDistance.
+            driverDistance = new DriverDistanceClass(driver, distance);
+
+            // Add a DriverDistance to the List
+            list_driverDistance.add(driverDistance);
+        }
+
+        return list_driverDistance;
+    }
+
+    /**
+     * Create List of Pairs.
+     * Each Pair represent Driver name and its total Distance.
+     * The List order by total distance in descending order
+     * @param driverList Given List of Drivers (List<Driver> type).
+     * @return List of Pairs of Driver name and its total Distance, order by total distance in descending order (List<Pair<String, Double>> type).
+     */
+    private List<Pair<String, Double>> getDescendingOrderList_driverNameDistance(List<Driver> driverList)
+    {
+        List<Pair<String, Double>> list_pair_driverNameDistance = new ArrayList<>();
+
+        // Create the List of Pairs of Driver name and its total Distance.
+        for (Driver driver : driverList)
+        {
+            // Add new Pair of Driver name and its total Distance, to the List.
+            list_pair_driverNameDistance.add(new Pair<>(driver.getName(), driver.getDistance()));
+        }
+
+        // Sort the List in descending order.
+        Collections.sort(list_pair_driverNameDistance, new Comparator<Pair<String, Double>>()
+        {
+            /**
+             * Create compare to the Comparator, in order to Sort the Collections.
+             * Compare by total Distance of the Pair Object (Pair Value, a Double type).
+             * Note: We want descending order, so we compare pair2 to pair1.
+             * Note: If we want ascending order, we need to compare pair1 to pair2.
+             * @param pair1 First pair to compare (Pair<String, Double> type).
+             * @param pair2 Second pair to compare (Pair<String, Double> type).
+             * @return A value which represent which pair is bigger (int type).
+             */
+            @Override
+            public int compare(final Pair<String, Double> pair1, final Pair<String, Double> pair2)
+            {
+                return pair2.getValue().compareTo(pair1.getValue());
+            }
+        }
+        );
+
+        return list_pair_driverNameDistance;
+    }
+
+    /**
+     * Create a rank report of all Drivers in the given City and the total distance of the Delivery they made.
+     * @param city Given City of the Drivers (City type).
+     * @return List that represent the rank report from the given City, order by total distance in descending order (List<DriverDistance> type).
+     */
     @Override
     public List<DriverDistance> getDriverRankReportByCity(City city)
     {
-        System.out.println("WaltServiceImpl.getDriverRankReportByCity");
-        return null;
+        // Find all Drivers.
+        List<Driver> driverList = (List<Driver>) driverRepository.findAllDriversByCity(city);
+
+        // Create and return the ordered rank report List
+        return getDriverDistanceListDescendingOrder(driverList);
     }
 }

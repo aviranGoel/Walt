@@ -147,11 +147,6 @@ public class MyTest
     }
 
     @Test
-    public void testBasics(){
-        assertEquals((driverRepository.findAllDriversByCity(cityRepository.findByName("Beer-Sheva")).size()), 2);
-    }
-
-    @Test
     public void testBasics_repositorySize()
     {
         assertEquals(((List<City>) cityRepository.findAll()).size(),4);
@@ -159,6 +154,15 @@ public class MyTest
         assertEquals(((List<Customer>) customerRepository.findAll()).size(),5);
         assertEquals(((List<Restaurant>) restaurantRepository.findAll()).size(),5);
         assertEquals(((List<Delivery>) deliveryRepository.findAll()).size(),6);
+    }
+
+
+    @Test
+    public void testBasics_totalDriversInCity(){
+        assertEquals((driverRepository.findAllDriversByCity(cityRepository.findByName("Jerusalem")).size()), 3);
+        assertEquals((driverRepository.findAllDriversByCity(cityRepository.findByName("Tel-Aviv")).size()), 3);
+        assertEquals((driverRepository.findAllDriversByCity(cityRepository.findByName("Beer-Sheva")).size()), 2);
+        assertEquals((driverRepository.findAllDriversByCity(cityRepository.findByName("Haifa")).size()), 3);
     }
 
     @Test
@@ -211,12 +215,12 @@ public class MyTest
 
         try
         {
-            Delivery delivery = waltService.createOrderAndAssignDriver(customer, restaurant, deliveryTime);
-            assertEquals(null, delivery);
+            assertEquals("Sorry no driver available to take the new Delivery!", waltService.createOrderAndAssignDriver(customer, restaurant, deliveryTime));
+            Assert.fail( "Should have thrown an exception" );
         }
         catch (Exception e)
         {
-            String expectedMessage = "Customer City not same as Restaurant City!";
+            String expectedMessage = "Sorry no driver available to take the new Delivery!";
             assertEquals( "Exception message must be correct", expectedMessage, e.getMessage() );
         }
     }
@@ -246,8 +250,7 @@ public class MyTest
         }
         catch (Exception e)
         {
-            String expectedMessage = "Customer City not same as Restaurant City!";
-            assertEquals( "Exception message must be correct", expectedMessage, e.getMessage() );
+            e.printStackTrace();
         }
     }
 
@@ -276,8 +279,7 @@ public class MyTest
         }
         catch (Exception e)
         {
-            String expectedMessage = "Customer City not same as Restaurant City!";
-            assertEquals( "Exception message must be correct", expectedMessage, e.getMessage() );
+            e.printStackTrace();
         }
     }
 
@@ -347,4 +349,35 @@ public class MyTest
         }
     }
 
+    @Test
+    public void getDriverRankReport_checkReportListSize()
+    {
+        List<DriverDistance> driverRankReport = waltService.getDriverRankReport();
+
+        assertEquals(((List<Driver>) driverRepository.findAll()).size(), driverRankReport.size());
+    }
+
+
+    @Test
+    public void getDriverRankReportByCity_checkReportListSize_forEachCityDrivers()
+    {
+        City city;
+        List<DriverDistance> driverRankReportByCity;
+
+        city = cityRepository.findByName("Jerusalem");
+        driverRankReportByCity = waltService.getDriverRankReportByCity(city);
+        assertEquals(3, driverRankReportByCity.size());
+
+        city = cityRepository.findByName("Tel-Aviv");
+        driverRankReportByCity = waltService.getDriverRankReportByCity(city);
+        assertEquals(3, driverRankReportByCity.size());
+
+        city = cityRepository.findByName("Beer-Sheva");
+        driverRankReportByCity = waltService.getDriverRankReportByCity(city);
+        assertEquals(2, driverRankReportByCity.size());
+
+        city = cityRepository.findByName("Haifa");
+        driverRankReportByCity = waltService.getDriverRankReportByCity(city);
+        assertEquals(3, driverRankReportByCity.size());
+    }
 }
